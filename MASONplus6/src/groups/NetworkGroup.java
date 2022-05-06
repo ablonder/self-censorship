@@ -69,7 +69,7 @@ public class NetworkGroup extends Network implements Steppable {
 		for(int i=0;i<agents.numObjs;i++) {
 			this.addNode(agents.objs[i]);
 		}
-		Bag nodes =getAllNodes();
+		Bag nodes = getAllNodes();
 		for(int i=0; i<nodes.numObjs;i++) {
 			Object from = nodes.objs[i];
 			Bag edges = getEdges(from, bag);

@@ -226,7 +226,7 @@ public class Observer implements ObserverInterface {
 			System.out.println("Time series chart is null!");
 			return;//nothing to do
 		}
-		state.gui.series.add(x,y,true);
+		//state.gui.series.add(x,y,true);
 		state.gui.chartTimeSeries.updateChartWithin((long)x, upDateInterval);  // update within one second (1000 millise
 	}
 	

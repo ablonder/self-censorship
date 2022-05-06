@@ -3,7 +3,7 @@ package sweep;
 import java.awt.Color;
 import java.lang.reflect.InvocationTargetException;
 import javax.swing.JFrame;
-import org.jfree.data.xy.XYSeries;
+//import org.jfree.data.xy.XYSeries;
 import sim.display.Console;
 import sim.display.Controller;
 import sim.display.Display2D;
@@ -55,7 +55,7 @@ public class GUIStateSweep extends GUIState {
 	public JFrame displayFrameChartXY = null;
 	public JFrame displayFrameChartH = null;
 	public static TimeSeriesChartGenerator chartTimeSeries = null;
-	public static XYSeries series = null;
+	//public static XYSeries series = null;
 	public static HistogramGenerator chartHistogram = null;
 	public static int bins = 10; //for histogram chart
 	public static String chartTitleXY = "";
@@ -290,14 +290,14 @@ public class GUIStateSweep extends GUIState {
 		if(chartTypeXY) {
 			chartTimeSeries.removeAllSeries();
 			uniqueChartId = chartTimeSeries.getTitle();
-			series = new XYSeries( uniqueChartId, false );
-			chartTimeSeries.addSeries(series,null);
+			//series = new XYSeries( uniqueChartId, false );
+			//chartTimeSeries.addSeries(series,null);
 		}
 		if(chartTypeH) {
 			chartHistogram.removeAllSeries();
 			uniqueChartId = chartHistogram.getTitle();
 			double[] data = new double[bins];
-			chartHistogram.addSeries(data, bins, uniqueChartId, null);
+			//chartHistogram.addSeries(data, bins, uniqueChartId, null);
 		}
 	}
 

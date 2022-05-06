@@ -17,6 +17,12 @@ public class Environment extends SimStateSweep {
 	double stepSize = 1.0;
 	NetworkStructure network = null;
 	boolean useNetwork = true;
+	// *Aviva* switch between possible network types - "meanK" is random, "pref" is preferential, "lPref" is linear preferential
+	String networkType = "meanK";
+	// *Aviva* number of nodes in the a separate component of the network
+	int networkSplit = 0;
+	// *Aviva* number of nodes shared between components
+	int networkShare = 0;
 	double meanK = 1;
 	double active = scheduleTimeInterval; //This is the probability of being active on each time step
 	double distance = 0.2; //distance to try to maintain
@@ -24,11 +30,11 @@ public class Environment extends SimStateSweep {
 	public double initialSensitivity = 0.7; //sensitivity legvel is 0.5 
 	public int n = 1000; //the number of agents 
 	Experimenter experimenter;
-	
+
 	public Environment(long seed, Class observer) {
 		super(seed, observer);
 	}
-	
+
 
 
 	public double getInitialProtesters() {
@@ -116,8 +122,8 @@ public class Environment extends SimStateSweep {
 	}
 
 	//public void setNetwork(NetworkStructure network) {
-//		this.network = network;
-//	}
+	//		this.network = network;
+	//	}
 
 	public boolean isUseNetwork() {
 		return useNetwork;
@@ -135,6 +141,38 @@ public class Environment extends SimStateSweep {
 		this.meanK = meanK;
 	}
 
+	
+	public String getNetworkType() {
+		return networkType;
+	}
+
+	public void setNetworkType(String networkType) {
+		this.networkType = networkType;
+	}
+
+
+	public int getNetworkSplit() {
+		return networkSplit;
+	}
+
+	public void setNetworkSplit(int networkSplit) {
+		this.networkSplit = networkSplit;
+	}
+
+	
+	public int getNetworkShare() {
+		return networkShare;
+	}
+
+	public void setNetworkShare(int networkShare) {
+		this.networkShare = networkShare;
+	}
+
+
+
+	/*
+	 * Modified by Aviva (05/06/2022) - made initialProtesters a starting proportion rather than a probability
+	 */
 	public void makeAgents() {
 		for(int i=0;i<n;i++) {
 			double x = random.nextDouble()*gridWidth;
@@ -143,8 +181,8 @@ public class Environment extends SimStateSweep {
 			this.continuousSpace.setObjectLocation(a, new Double2D(x,y));
 			a.event = schedule.scheduleRepeating(a);
 			//a.event = schedule.scheduleRepeating(1.0,a, scheduleTimeInterval); //this allows us to schedule for explicit time intervals
-			//TODO: change probability to proportion
-			if(random.nextBoolean(initialProtesters)) {
+			// *Aviva* if there are less than the initial proportion of protesters, make them disagree, otherwise make them agree 
+			if(i < initialProtesters*n) {
 				a.belief = 0.5 * random.nextDouble(true, false); //have a value of [0.5,1), biased towards strategyB
 			}
 			else {
@@ -152,11 +190,14 @@ public class Environment extends SimStateSweep {
 			}
 			a.sensitivity = initialSensitivity + (random.nextDouble(true, false) - 0.5)/10;
 		}
-		
-	}
 
+	}
 	
-	
+
+
+	/*
+	 * Modified by Aviva (05/06/2022) - moved network structuring into makeNet function
+	 */
 	public void start() {
 		super.start();
 		experimenter = (Experimenter)observer;
@@ -165,11 +206,21 @@ public class Environment extends SimStateSweep {
 		makeAgents();
 		if(useNetwork) {
 			network = new NetworkStructure();
-			network.addMembers(this.continuousSpace.allObject
-			// TODO - create option to make 2 separate networks with n shared nodes
-			//network.randomNetworkMeanK(this, network.allNodes, 2, null);//random network
-			network.preferentialNetwork(this, network.allNodes,1.2, null); //preferential attachment network
-			//network.preferentialNetworkLinear(this, network.allNodes, null);
+			network.addMembers(this.continuousSpace.allObjects);
+			// *Aviva* actually make the networks (throws an error if an invalid network type is given)
+			try {
+				// *Aviva* if there's no network split (0 or total number of agents) just make a network of the designated type
+				if(this.networkSplit <= 0 || this.networkSplit >= n) {
+					// *Aviva* make a network of the designated type
+					network.makeNet(this, network.allNodes, this.networkType);
+				} else {
+					// *Aviva* otherwise, randomly divide up the network into components of the designated sizes
+					network.splitNetwork(this, this.networkSplit, this.networkShare, this.networkType);
+				}
+			} catch (RuntimeException e) {
+				System.out.println("Invalid network type");
+				System.exit(0);
+			}
 		}
 		if(observer != null) observer.initialize(this.continuousSpace, spaces,scheduleTimeInterval);
 	}

@@ -11,14 +11,15 @@ public class Test {
 		for(int i=0;i<20;i++) {
 			agents.add(i+1);
 		}
-		SimState state = new SimState(System.currentTimeMillis());
-		ng.preferentialNetwork(state,agents,1.2, null);
-		Bag nodes = ng.allNodes;
-		for(int i=0;i<nodes.numObjs;i++) {
-			Object node = nodes.objs[i];
-			Bag neighbors = ng.UndirNeighbors(node);
-			//System.out.println(neighbors);
-		}
+		
+//		SimState state = new SimState(System.currentTimeMillis());
+//		ng.preferentialNetwork(state,agents,1.2, null);
+//		Bag nodes = ng.allNodes;
+//		for(int i=0;i<nodes.numObjs;i++) {
+//			Object node = nodes.objs[i];
+//			Bag neighbors = ng.UndirNeighbors(node);
+//			//System.out.println(neighbors);
+//		}
 	
 }
 

@@ -1,5 +1,6 @@
 package structures;
 
+import ec.util.MersenneTwisterFast;
 import groups.Groups;
 import groups.NetworkGroup;
 import sim.engine.SimState;
@@ -32,7 +33,7 @@ public class NetworkStructure extends NetworkGroup {
 	 * @param node
 	 */
 	public Bag UndirNeighbors(final Object node) {
-		System.out.println(node + "  ");
+		//System.out.println(node + "  ");
 		Object from = node;
 		Bag bag = new Bag();
 		Bag Edgebag = getEdges(from, bag);
@@ -40,7 +41,7 @@ public class NetworkStructure extends NetworkGroup {
 		for(int i=0; i<Edgebag.numObjs;i++) {
 			Edge e = (Edge)Edgebag.objs[i];
 			Object neighbor =  e.getOtherNode(from);
-			System.out.println("neighbor " + neighbor);
+			//System.out.println("neighbor " + neighbor);
 			Nodes.add(neighbor);
 		} 
 		return Nodes;
@@ -132,6 +133,63 @@ public class NetworkStructure extends NetworkGroup {
 					addEdge(from, to, null);
 				}
 				
+			}
+		}
+	}
+	
+	
+	/*
+	 * @author Aviva (05/06/2022) - utility to modify a given portion of the network according to a given algorithm
+	 */
+	public void makeNet(SimState state, Bag agents, String nettype) throws RuntimeException {
+		// if networkType is meanK, make a random network, pref is preferential, lPref is linear preferential
+		if(nettype == "meanK") {
+			randomNetworkMeanK(state, allNodes, 2, null);//random network
+		} else if(nettype == "pref") {
+			preferentialNetwork(state, allNodes,1.2, null); //preferential attachment network
+		} else if(nettype == "lPref") {
+			// linear preferential attachment network
+			preferentialNetworkLinear(state, allNodes, null);
+		}else {
+			// if no valid type has been given, throw and error that can be dealt with above
+			throw new RuntimeException("Invalid network type");
+		}
+	}
+	
+	/*
+	 * @author Aviva (05/06/2022) - utility to divide the network into components of a given size with the given number of shared nodes 
+	 * @throws - passes along invalid network type exception from makeNet
+	 */
+	public void splitNetwork(SimState state, int compsize, int sharednodes, String nettype) throws RuntimeException {
+		// bags to hold the two components
+		Bag comp1 = new Bag();
+		Bag comp2 = new Bag();
+		// copy a list of all the nodes in the network so that I can remove nodes from it as I go
+		Bag nodes = new Bag(allNodes);
+		// first add the shared nodes to both
+		moveRandItems(state.random, nodes, new Bag[] {comp1, comp2}, sharednodes);
+		// then finish constructing component one (of the given size)
+		moveRandItems(state.random, nodes, new Bag[] {comp1}, compsize-sharednodes);
+		makeNet(state, comp1, nettype);
+		// and component two (that contains the rest of the nodes)
+		moveRandItems(state.random, nodes, new Bag[] {comp2}, allNodes.numObjs-compsize-sharednodes);
+		makeNet(state, comp2, nettype);
+	}
+	
+	
+	/*
+	 * @author Aviva - simple utility for moving some number of random items from one Bag to other(s)
+	 */
+	public void moveRandItems(MersenneTwisterFast rnd, Bag from, Bag[] to, int objs) {
+		for(int i = 0; i < objs; i++) {
+			// if the bag to remove from is empty, just end the loop
+			if(from.isEmpty()) {
+				break;
+			}
+			// otherwise, get a random object from the bag and add it to the other Bag(s)
+			Object o = from.remove(rnd.nextInt(from.numObjs));
+			for(int b = 0; b < to.length; b++) {
+				to[b].add(o);
 			}
 		}
 	}

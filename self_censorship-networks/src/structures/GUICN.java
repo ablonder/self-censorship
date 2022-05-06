@@ -61,7 +61,7 @@ public class GUICN extends GUIStateSweep {
 
 
 	public static void main(String[] args) {
-		GUICN.initializeTimeSeriesChart( "Con-government signalers", "Time", "Number of people who signal agains goverment policy");
+		//GUICN.initializeTimeSeriesChart( "Con-government signalers", "Time", "Number of people who signal agains goverment policy");
 		//GUICN.initializeHistogramChart( "Phases", "Phases", "# Agents",5);
 		GUICN.initialize(Environment.class, Experimenter.class, GUICN.class, 600, 600, Color.WHITE, Color.BLUE, false, spaces.CONTINUOUS);
 
