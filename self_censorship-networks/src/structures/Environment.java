@@ -221,7 +221,6 @@ public class Environment extends Model {
 	}
 	
 
-
 	/*
 	 * Modified by Aviva (05/06/2022) - moved network structuring into makeNet function
 	 * Modified again (05/12/2022) - changed code to create the space to match Model
