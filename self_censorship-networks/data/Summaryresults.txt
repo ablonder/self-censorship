@@ -106,3 +106,30 @@ scheduleTimeInterval  1.0
 closeProgramAtend  true
 initialProtesters	Value	initialSensitivity	Value	Step	Reps	pro	con	silent	avgSensitivity	Step	Reps	pro	con	silent	avgSensitivity	
 initialProtesters	0.3	initialSensitivity	0.3	999.000	1.000	5.000	1.000	14.000	0.018	999.000	1.000	0.000	0.000	0.000	0.000
+Parameter Sweeps
+
+Number of parameters swept: 9
+
+Table of parameters swept 
+public	double	initialProtesters	0.3	0.3	0.3	0.5	0.5	0.5	0.7	0.7	0.7	
+public	double	initialSensitivity	0.3	0.5	0.7	0.3	0.5	0.7	0.3	0.5	0.7	
+
+Parameter values for the class class structures.Environment
+initialProtesters  0.3
+initialSensitivity  0.3
+n  20
+nameSpace  SPARSE
+gridWidth  50
+gridHeight  50
+paramSweeps  true
+simLength  1000
+simNumber  1
+fileDataName  results.txt
+folderDataName  data
+dataSamplingInterval  1
+burnIn  0
+scheduleTimeInterval  1.0
+closeProgramAtend  true
+initialProtesters	Value	initialSensitivity	Value	Step	Reps	pro	con	silent	avgSensitivity	Step	Reps	pro	con	silent	avgSensitivity	
+initialProtesters	0.3	initialSensitivity	0.3	999.000	1.000	3.000	1.000	16.000	0.018	999.000	1.000	0.000	0.000	0.000	0.000
+initialProtesters	0.3	initialSensitivity	0.5	999.000	1.000	5.000	1.000	14.000	0.019	999.000	1.000	0.000	0.000	0.000	0.000

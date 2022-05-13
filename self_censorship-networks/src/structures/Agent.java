@@ -1,5 +1,7 @@
 package structures;
 
+import java.awt.Color;
+
 import randomWalker.RandomWalkerContinuousAbstract;
 import sim.engine.SimState;
 import sim.engine.Stoppable;
@@ -17,6 +19,8 @@ public class Agent extends RandomWalkerContinuousAbstract {
 	public double negative_peers; //number of peers that signal against the government policy
 	public double silent_peers;//number of peers that do not signal
 	public double signal = 0; //action: signal pro-message=1; signal con message = -1; no signal = 0
+	// *Aviva* store agent color for visualization
+	public Color color;
 
 
 	public Agent(Environment state, double x, double y, double stepSize) {
@@ -57,15 +61,15 @@ public class Agent extends RandomWalkerContinuousAbstract {
 				this.signal = 0;
 			}
 		}
-		//set color
+		// *Aviva* set color variable based on signal
 		if(this.signal == 1) { 
-			setColor(state, (float)1,(float)0, (float)0, (float)1);//red for pro-government signal
+			this.color = new Color((float)1,(float)0, (float)0, (float)1);//red for pro-government signal
 		}
 		if(this.signal == -1) {
-			setColor(state, (float)0,(float)0, (float)1, (float)1);//blue for anti-government signal
+			this.color = new Color((float)0,(float)0, (float)1, (float)1);//blue for anti-government signal
 		}
 		if(this.signal == 0) {
-			setColor(state, (float)0.75, (float)0.75, (float)0.75,(float)1); //grey for no signaling
+			this.color = new Color((float)0.75, (float)0.75, (float)0.75,(float)1); //grey for no signaling
 		}
 
 		//update info

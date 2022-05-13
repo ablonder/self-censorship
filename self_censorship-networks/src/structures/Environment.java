@@ -1,47 +1,70 @@
 package structures;
 
-
-
 import groups.NetworkGroup;
+import model.Model;
 import sim.engine.SimState;
+import sim.field.continuous.Continuous2D;
 import sim.util.Bag;
 import sim.util.Double2D;
 import spaces.Spaces;
+import structures.NetworkStructure.InvalidNetworkTypeException;
 //import structures.NetworkStructure;
-import sweep.SimStateSweep;
 
-public class Environment extends SimStateSweep {
+public class Environment extends Model {
 	boolean gaussian = false;
 	double rotation = .2;
 	double gaussanStandardDeviation = 1.0;
 	double stepSize = 1.0;
-	NetworkStructure network = null;
-	boolean useNetwork = true;
+	public NetworkStructure network;
+	public boolean useNetwork = true;
 	// *Aviva* switch between possible network types - "meanK" is random, "pref" is preferential, "lPref" is linear preferential
-	String networkType = "meanK";
+	public String networkType = "meanK";
 	// *Aviva* number of nodes in the a separate component of the network
-	int networkSplit = 0;
+	public int networkSplit = 0;
 	// *Aviva* number of nodes shared between components
-	int networkShare = 0;
-	double meanK = 1;
-	double active = scheduleTimeInterval; //This is the probability of being active on each time step
+	public int networkShare = 0;
+	public double meanK = 1;
+	// *Aviva* set to 1 so that it doesn't rely on a variable from SimSweep
+	double active = 1; //This is the probability of being active on each time step
 	double distance = 0.2; //distance to try to maintain
 	public double initialProtesters = 0.2; // 40% agents disagree with government policy
 	public double initialSensitivity = 0.7; //sensitivity legvel is 0.5 
 	public int n = 1000; //the number of agents 
-	Experimenter experimenter;
+	// *Aviva* - space for the agents to be in, since my Model class doesn't set that up
+	public Continuous2D continuousSpace;
+	// *Aviva* - as well as the dimension of the space
+	public int gridWidth;
+	public int gridHeight;
 
-	public Environment(long seed, Class observer) {
-		super(seed, observer);
+	/*
+	 * Modified by Aviva (05/12/2022) - removed arguments to match Model
+	 */
+	public Environment() {
+		super();
 	}
-
-
+	
+	/*
+	 * @author Aviva - constructor for reading parameters from a file
+	 */
+	public Environment(String fname) {
+		super(fname);
+	}
+	
+	
+	/*
+	 * @author Aviva - necessary helper function for Model so that it can get the fields from this class and the agent class
+	 */
+	public void setClasses() {
+		// the class that runs the simulation and handles most parameters
+		this.subclass = Environment.class;
+		// the agent class for gathering agent-level data
+		this.agentclass = Agent.class;
+	}
+	
 
 	public double getInitialProtesters() {
 		return initialProtesters;
 	}
-
-
 
 	public void setInitialProtesters(double initialProtesters) {
 		this.initialProtesters = initialProtesters;
@@ -197,12 +220,12 @@ public class Environment extends SimStateSweep {
 
 	/*
 	 * Modified by Aviva (05/06/2022) - moved network structuring into makeNet function
+	 * Modified again (05/12/2022) - changed code to create the space to match Model
 	 */
 	public void start() {
 		super.start();
-		experimenter = (Experimenter)observer;
-		spaces = Spaces.CONTINUOUS;
-		this.make2DSpace(Spaces.CONTINUOUS, 1.0, gridWidth, gridHeight);
+		// *Aviva* initializes space directly
+		this.continuousSpace = new Continuous2D(1, gridWidth, gridHeight);
 		makeAgents();
 		if(useNetwork) {
 			network = new NetworkStructure();
@@ -217,12 +240,19 @@ public class Environment extends SimStateSweep {
 					// *Aviva* otherwise, randomly divide up the network into components of the designated sizes
 					network.splitNetwork(this, this.networkSplit, this.networkShare, this.networkType);
 				}
-			} catch (RuntimeException e) {
+			} catch (InvalidNetworkTypeException e) {
 				System.out.println("Invalid network type");
 				System.exit(0);
 			}
 		}
-		if(observer != null) observer.initialize(this.continuousSpace, spaces,scheduleTimeInterval);
+	}
+	
+	/*
+	 * @author Aviva
+	 * Main method for running the simulation
+	 */
+	public static void main(String[] args) {
+		Environment env = new Environment("test.txt");
 	}
 
 }

@@ -37,4 +37,4 @@ public double scheduleTimeInterval = 1.0;
 public boolean closeProgramAtend = true;
 public int n = 20;
 public int networkSplit = 10;
-public int networkShare = 1;
+public int networkShare = 0;

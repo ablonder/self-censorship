@@ -1,0 +1,6 @@
+% Base Parameters: gaussian = false, rotation = .2, gaussanStandardDeviation = 1, stepSize = 1, useNetwork = true, networkType = meanK, networkSplit = 0, networkShare = 0, meanK = 1, active = 1, distance = .2, initialProtesters = .2, initialSensitivity = .7, n = 1000, gridWidth = 100, gridHeight = 100, 
+
+% Random Parameters: 
+% Test Parameters:
+% ,,,Results
+Seed,Timestep,Agent,sensitivity,signal,

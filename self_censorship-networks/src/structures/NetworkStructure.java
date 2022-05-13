@@ -141,18 +141,18 @@ public class NetworkStructure extends NetworkGroup {
 	/*
 	 * @author Aviva (05/06/2022) - utility to modify a given portion of the network according to a given algorithm
 	 */
-	public void makeNet(SimState state, Bag agents, String nettype) throws RuntimeException {
+	public void makeNet(Environment env, Bag agents, String nettype) throws InvalidNetworkTypeException {
 		// if networkType is meanK, make a random network, pref is preferential, lPref is linear preferential
-		if(nettype == "meanK") {
-			randomNetworkMeanK(state, allNodes, 2, null);//random network
-		} else if(nettype == "pref") {
-			preferentialNetwork(state, allNodes,1.2, null); //preferential attachment network
-		} else if(nettype == "lPref") {
+		if(nettype.contentEquals("meanK")) {
+			randomNetworkMeanK(env, allNodes, env.meanK, null);//random network
+		} else if(nettype.contentEquals("pref")) {
+			preferentialNetwork(env, allNodes, 1.2, null); //preferential attachment network
+		} else if(nettype.contentEquals("lPref")) {
 			// linear preferential attachment network
-			preferentialNetworkLinear(state, allNodes, null);
+			preferentialNetworkLinear(env, allNodes, null);
 		}else {
 			// if no valid type has been given, throw and error that can be dealt with above
-			throw new RuntimeException("Invalid network type");
+			throw new InvalidNetworkTypeException("Invalid network type");
 		}
 	}
 	
@@ -160,20 +160,20 @@ public class NetworkStructure extends NetworkGroup {
 	 * @author Aviva (05/06/2022) - utility to divide the network into components of a given size with the given number of shared nodes 
 	 * @throws - passes along invalid network type exception from makeNet
 	 */
-	public void splitNetwork(SimState state, int compsize, int sharednodes, String nettype) throws RuntimeException {
+	public void splitNetwork(Environment env, int compsize, int sharednodes, String nettype) throws InvalidNetworkTypeException {
 		// bags to hold the two components
 		Bag comp1 = new Bag();
 		Bag comp2 = new Bag();
 		// copy a list of all the nodes in the network so that I can remove nodes from it as I go
 		Bag nodes = new Bag(allNodes);
 		// first add the shared nodes to both
-		moveRandItems(state.random, nodes, new Bag[] {comp1, comp2}, sharednodes);
+		moveRandItems(env.random, nodes, new Bag[] {comp1, comp2}, sharednodes);
 		// then finish constructing component one (of the given size)
-		moveRandItems(state.random, nodes, new Bag[] {comp1}, compsize-sharednodes);
-		makeNet(state, comp1, nettype);
+		moveRandItems(env.random, nodes, new Bag[] {comp1}, compsize-sharednodes);
+		makeNet(env, comp1, nettype);
 		// and component two (that contains the rest of the nodes)
-		moveRandItems(state.random, nodes, new Bag[] {comp2}, allNodes.numObjs-compsize-sharednodes);
-		makeNet(state, comp2, nettype);
+		moveRandItems(env.random, nodes, new Bag[] {comp2}, allNodes.numObjs-compsize-sharednodes);
+		makeNet(env, comp2, nettype);
 	}
 	
 	
@@ -194,9 +194,6 @@ public class NetworkStructure extends NetworkGroup {
 		}
 	}
 			
-
-	
-
 //	public static void main(String[] args) {
 //			NetworkStructure ng = new NetworkStructure(false);
 //			Bag agents = new Bag();
@@ -214,5 +211,22 @@ public class NetworkStructure extends NetworkGroup {
 //			}
 		
 //}
+	
+	/*
+	 * @author Aviva - invalid network type exception so that it can be caught at multiple levels
+	 */
+	class InvalidNetworkTypeException extends Exception {
+		
+		public InvalidNetworkTypeException() {
+			// empty constructor
+		}
+		
+		// according to stack overflow it needs one of these too
+		public InvalidNetworkTypeException(String message) {
+			super(message);
+		}
+		
+	}
+	
 }
 
