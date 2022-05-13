@@ -42,6 +42,8 @@ public class Agent extends RandomWalkerContinuousAbstract {
 		this.positive_peers = 0;
 		this.negative_peers = 0;
 		this.silent_peers = 0;
+		// *Aviva* remove this agent's previous signal from the corresponding count
+		countSignal(state, -1);
 		//make decisions on whether to signal
 		// *Aviva* if pro-government (belief [0,.5)), signal with probability proportional to strength of belief 
 		if(this.belief < 0.5) {
@@ -61,6 +63,8 @@ public class Agent extends RandomWalkerContinuousAbstract {
 				this.signal = 0;
 			}
 		}
+		// *Aviva* add the agent's new signal to the corresponding count
+		countSignal(state, +1);
 		// *Aviva* set color variable based on signal
 		if(this.signal == 1) { 
 			this.color = new Color((float)1,(float)0, (float)0, (float)1);//red for pro-government signal
@@ -91,6 +95,8 @@ public class Agent extends RandomWalkerContinuousAbstract {
 				this.negative_peers += 1;
 			}
 		} 
+		// remove this agent's previous sensitivity from the total
+		state.totalsensitivity -= this.sensitivity;
 		//update political sensitivity according to peer information, if negative_peers = 0, increase political sensitivity largely
 		//TODO 1. -Aviva- math looks okay; 2.updating system (find some literature)
 		// if no one expresses dissident opinions, increase sensitivity (up to a max of 1)
@@ -107,10 +113,25 @@ public class Agent extends RandomWalkerContinuousAbstract {
 				this.sensitivity = 0;
 			}
 		}
-
-
-
+		// add this agent's new sensitivity to the total
+		state.totalsensitivity += this.sensitivity;
 	}
+	
+	/*
+	 * @author Aviva
+	 * Small helper function to adjust (increment/decrement) population-wide counts based on the agent's signal
+	 */
+	public void countSignal(Environment env, int adj) {
+		// adjust the count corresponding to this agent's signal
+		if(this.signal == -1) {
+			env.negative_signals += adj;
+		} else if(this.signal == 0) {
+			env.silent_signals += adj;
+		} else if(this.signal == 1) {
+			env.positive_signals += adj;
+		}
+	}
+	
 
 	/*
 	 * Modified by Aviva (06/05/2022) - commented out movement

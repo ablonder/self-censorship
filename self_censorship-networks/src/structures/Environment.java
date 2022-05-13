@@ -35,6 +35,12 @@ public class Environment extends Model {
 	// *Aviva* - as well as the dimension of the space
 	public int gridWidth;
 	public int gridHeight;
+	
+	// *Aviva* some additional variables for gathering aggregate data during the simulation
+	public int positive_signals;
+	public int negative_signals;
+	public int silent_signals;
+	public int totalsensitivity;
 
 	/*
 	 * Modified by Aviva (05/12/2022) - removed arguments to match Model
@@ -249,6 +255,7 @@ public class Environment extends Model {
 			}
 		}
 	}
+	
 	
 	/*
 	 * @author Aviva
