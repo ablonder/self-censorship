@@ -197,12 +197,16 @@ public class Environment extends Model {
 	 * Modified by Aviva (05/06/2022) - made initialProtesters a starting proportion rather than a probability
 	 */
 	public void makeAgents() {
+		// *Aviva* Initialize list of agents for gathering data
+		this.agents = new Object[n];
 		for(int i=0;i<n;i++) {
 			double x = random.nextDouble()*gridWidth;
 			double y = random.nextDouble()*gridHeight;
 			Agent a = new Agent(this,x,y,stepSize);
 			this.continuousSpace.setObjectLocation(a, new Double2D(x,y));
 			a.event = schedule.scheduleRepeating(a);
+			// *Aviva* add this agent to the list for data gathering
+			this.agents[i] = a;
 			//a.event = schedule.scheduleRepeating(1.0,a, scheduleTimeInterval); //this allows us to schedule for explicit time intervals
 			// *Aviva* if there are less than the initial proportion of protesters, make them disagree, otherwise make them agree 
 			if(i < initialProtesters*n) {
