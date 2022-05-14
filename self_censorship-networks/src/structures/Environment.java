@@ -222,6 +222,9 @@ public class Environment extends Model {
 				a.belief = 0.5 + 0.5 * random.nextDouble(true, false);  //have a value of [0,0.5), biased towards strategyA
 			}
 			a.sensitivity = initialSensitivity + (random.nextDouble(true, false) - 0.5)/10;
+			// *Aviva* add the agent's initial sensitivity and signal to the corresponding counts
+			this.totalsensitivity += a.sensitivity;
+			a.countSignal(this, 1);
 		}
 
 	}
