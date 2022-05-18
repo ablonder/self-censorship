@@ -87,6 +87,7 @@ public class NetworkGroup extends Network implements Steppable {
 	 * This method constructs a random network with mean_K connections.  The mean number of connections can be
 	 * any real number.  The method does not guarantee that the network will have a mean number of connections per
 	 * node that is exactly mean_K, but on average, the mean number of connections will be mean_K.
+	 * Modified by Aviva - so that it just connects the provided agents rather than using all agents
 	 * @param state
 	 * @param agents
 	 * @param mean_K
@@ -109,33 +110,32 @@ public class NetworkGroup extends Network implements Steppable {
 		for(int i=0; i< agents.numObjs;i++) {
 			this.addNode(agents.objs[i]);
 		}
-		Bag theNodes = this.allNodes;
 		int start = 0;
 		while(start < c) {
-			Object to = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
-			Object from = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
+			Object to = agents.objs[state.random.nextInt(agents.numObjs)];
+			Object from = agents.objs[state.random.nextInt(agents.numObjs)];
 			while(to.equals(from)) {//make sure not the same
-				to = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
-				from = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
+				to = agents.objs[state.random.nextInt(agents.numObjs)];
+				from = agents.objs[state.random.nextInt(agents.numObjs)];
 			}
 			while(!addConnection(from,to, info)) {//connect if not connected otherwise tryu again
-				to = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
-				from = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
+				to = agents.objs[state.random.nextInt(agents.numObjs)];
+				from = agents.objs[state.random.nextInt(agents.numObjs)];
 			}
 			start++;
 		}
 
 		if(remainder > 0 && state.random.nextBoolean(remainder)) { //take a look at this
-			Object to = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
-			Object from = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
+			Object to = agents.objs[state.random.nextInt(agents.numObjs)];
+			Object from = agents.objs[state.random.nextInt(agents.numObjs)];
 			while(to.equals(from)) {
-				to = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
-				from = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
+				to = agents.objs[state.random.nextInt(agents.numObjs)];
+				from = agents.objs[state.random.nextInt(agents.numObjs)];
 
 			}
 			while(!addConnection(from,to, info)) {//connect if not connected otherwise tryu again
-				to = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
-				from = theNodes.objs[state.random.nextInt(allNodes.numObjs)];
+				to = agents.objs[state.random.nextInt(agents.numObjs)];
+				from = agents.objs[state.random.nextInt(agents.numObjs)];
 			}
 		}
 	}

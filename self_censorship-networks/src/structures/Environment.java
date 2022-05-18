@@ -18,9 +18,9 @@ public class Environment extends Model {
 	public NetworkStructure network;
 	public boolean useNetwork = true;
 	// *Aviva* switch between possible network types - "meanK" is random, "pref" is preferential, "lPref" is linear preferential
-	public String networkType = "meanK";
-	// *Aviva* number of nodes in the a separate component of the network
-	public int networkSplit = 0;
+	public String networkType = "random";
+	// *Aviva* number of nodes in each separate component of the network
+	public int[] networkSplit;
 	// *Aviva* number of nodes shared between components
 	public int networkShare = 0;
 	public double meanK = 1;
@@ -180,15 +180,6 @@ public class Environment extends Model {
 	}
 
 
-	public int getNetworkSplit() {
-		return networkSplit;
-	}
-
-	public void setNetworkSplit(int networkSplit) {
-		this.networkSplit = networkSplit;
-	}
-
-	
 	public int getNetworkShare() {
 		return networkShare;
 	}
@@ -231,7 +222,7 @@ public class Environment extends Model {
 	
 
 	/*
-	 * Modified by Aviva (05/06/2022) - moved network structuring into makeNet function
+	 * Modified by Aviva (05/06/2022) - moved selection of network structure into makeNet function
 	 * Modified again (05/12/2022) - changed code to create the space to match Model
 	 */
 	public void start() {
@@ -244,18 +235,41 @@ public class Environment extends Model {
 			network.addMembers(this.continuousSpace.allObjects);
 			// *Aviva* actually make the networks (throws an error if an invalid network type is given)
 			try {
-				// *Aviva* if there's no network split (0 or total number of agents) just make a network of the designated type
-				if(this.networkSplit <= 0 || this.networkSplit >= n) {
+				// *Aviva* if there's no network split just add all the agents to a network of the designated type
+				if(this.networkSplit == null || this.networkSplit.length == 0) {
 					// *Aviva* make a network of the designated type
 					network.makeNet(this, network.allNodes, this.networkType);
+				} else if(this.networkShare > 0 && this.networkSplit.length == 2){
+					// *Aviva* otherwise, if there are nodes shared between two components, randomly divide up the network with shared nodes
+					network.shareSplit(this, this.networkSplit[0], this.networkSplit[1], this.networkShare, this.networkType);
 				} else {
-					// *Aviva* otherwise, randomly divide up the network into components of the designated sizes
-					network.splitNetwork(this, this.networkSplit, this.networkShare, this.networkType);
+					// *Aviva* otherwise, just randomly divide up the nodes into a multi-component network
+					network.splitNetwork(this, this.networkSplit, this.networkType);
 				}
 			} catch (InvalidNetworkTypeException e) {
 				System.out.println("Invalid network type");
 				System.exit(0);
 			}
+		}
+	}
+	
+	/*
+	 * @author Aviva - sets the values of parameters that the superclass can't set automatically (e.g. arrays)
+	 */
+	public void setParamVal(Class c, String pname, String pval) {
+		// so far, this is just for converting a list of ints (in the form 1,2,3) into an array of splits
+		if(c == this.subclass && pname.contentEquals("networkSplit")) {
+			// start by splitting the provided value into an array of Strings
+			String[] splits = pval.split(",");
+			// this can be used to initialize the array of splits to the right length
+			this.networkSplit = new int[splits.length];
+			// then I can loop through the strings, convert them to ints, and add them to the array
+			for(int i = 0; i < splits.length; i++) {
+				this.networkSplit[i] = Integer.parseInt(splits[i]);
+			}
+		} else {
+			// otherwise just do what the superclass would do
+			super.setParamVal(c, pname, pval);
 		}
 	}
 	

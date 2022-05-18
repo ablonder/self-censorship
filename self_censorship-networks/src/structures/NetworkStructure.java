@@ -143,13 +143,13 @@ public class NetworkStructure extends NetworkGroup {
 	 */
 	public void makeNet(Environment env, Bag agents, String nettype) throws InvalidNetworkTypeException {
 		// if networkType is meanK, make a random network, pref is preferential, lPref is linear preferential
-		if(nettype.contentEquals("meanK")) {
-			randomNetworkMeanK(env, allNodes, env.meanK, null);//random network
+		if(nettype.contentEquals("random") || nettype.contentEquals("meanK")) {
+			randomNetworkMeanK(env, agents, env.meanK, null);//random network
 		} else if(nettype.contentEquals("pref")) {
-			preferentialNetwork(env, allNodes, 1.2, null); //preferential attachment network
+			preferentialNetwork(env, agents, 1.2, null); //preferential attachment network
 		} else if(nettype.contentEquals("lPref")) {
 			// linear preferential attachment network
-			preferentialNetworkLinear(env, allNodes, null);
+			preferentialNetworkLinear(env, agents, null);
 		}else {
 			// if no valid type has been given, throw and error that can be dealt with above
 			throw new InvalidNetworkTypeException("Invalid network type");
@@ -157,10 +157,28 @@ public class NetworkStructure extends NetworkGroup {
 	}
 	
 	/*
+	 * @author Aviva (05/17/2022) - utility to divide the network into components of a given size using a given algorithm
+	 * @throws - passes along invalid network type exception from makeNet 
+	 */
+	public void splitNetwork(Environment env, int[] compsizes, String nettype) throws InvalidNetworkTypeException {
+		// copy a Bag of all the nodes in the network so nodes can be removed as they're added to components
+		Bag nodes = new Bag(allNodes);
+		for(int i = 0; i < compsizes.length; i++) {
+			// bag to hold this component
+			Bag comp = new Bag();
+			// move a random set of nodes from the bag of nodes
+			moveRandItems(env.random, nodes, new Bag[] {comp}, compsizes[i]);
+			// make a network of the designated type using the selected nodes
+			makeNet(env, comp, nettype);
+		}
+	}
+	
+	
+	/*
 	 * @author Aviva (05/06/2022) - utility to divide the network into components of a given size with the given number of shared nodes 
 	 * @throws - passes along invalid network type exception from makeNet
 	 */
-	public void splitNetwork(Environment env, int compsize, int sharednodes, String nettype) throws InvalidNetworkTypeException {
+	public void shareSplit(Environment env, int comp1size, int comp2size, int sharednodes, String nettype) throws InvalidNetworkTypeException {
 		// bags to hold the two components
 		Bag comp1 = new Bag();
 		Bag comp2 = new Bag();
@@ -169,10 +187,10 @@ public class NetworkStructure extends NetworkGroup {
 		// first add the shared nodes to both
 		moveRandItems(env.random, nodes, new Bag[] {comp1, comp2}, sharednodes);
 		// then finish constructing component one (of the given size)
-		moveRandItems(env.random, nodes, new Bag[] {comp1}, compsize-sharednodes);
+		moveRandItems(env.random, nodes, new Bag[] {comp1}, comp1size-sharednodes);
 		makeNet(env, comp1, nettype);
 		// and component two (that contains the rest of the nodes)
-		moveRandItems(env.random, nodes, new Bag[] {comp2}, allNodes.numObjs-compsize-sharednodes);
+		moveRandItems(env.random, nodes, new Bag[] {comp2}, comp2size-sharednodes);
 		makeNet(env, comp2, nettype);
 	}
 	
