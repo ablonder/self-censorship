@@ -15,6 +15,8 @@ public class Agent extends RandomWalkerContinuousAbstract {
 	protected Stoppable event;
 	public double belief; //initial belief on government policy range from 0 to 1
 	public double sensitivity; //political sensitivity range from 0 to 1
+	// *Aviva* this agent's perceived censorship line
+	public double censorship;
 	public double positive_peers; //number of peers that signal for the government policy
 	public double negative_peers; //number of peers that signal against the government policy
 	public double silent_peers;//number of peers that do not signal
@@ -32,13 +34,24 @@ public class Agent extends RandomWalkerContinuousAbstract {
 		xdir = Math.cos(randomAngle) * stepSize;
 		ydir = Math.sin(randomAngle) * stepSize;
 		//assign internal values
-
 	}
 
 	/*
-	 * Modified by Aviva (05/06/2022) - fixed calculations for determining when to signal, and checked math for learning
+	 * @author Aviva - determines which game agents play (based on sensitivity or perceived censorship)
 	 */
-	public void play(Environment state){
+	public void play(Environment state) {
+		if(state.sensitivity) {
+			playSensitivity(state);
+		} else {
+			playCensorship(state);
+		}
+	}
+	
+	/*
+	 * Modified by Aviva (05/06/2022) - fixed calculations for determining when to signal, and checked math for learning
+	 * Modified again (06/10/2022) - converted to playSensitivity for use with sensitivity learning model only
+	 */
+	public void playSensitivity(Environment state){
 		this.positive_peers = 0;
 		this.negative_peers = 0;
 		this.silent_peers = 0;
@@ -118,8 +131,50 @@ public class Agent extends RandomWalkerContinuousAbstract {
 	}
 	
 	/*
+	 * @author Aviva - function for signaling and learning based on a perceived censorship line
+	 */
+	public void playCensorship(Environment state) {
+		// remove current signal from the population total
+		state.totalsignal -= this.signal;
+		// decide whether to signal based on intensity of opinion
+		if(state.random.nextBoolean(2*Math.abs(this.belief-.5))) {
+			// signal the intensity of your opinion (or what you think the censorship line is)
+			this.signal = Math.min(this.censorship, this.belief);
+			// if your signal is too much for the censorship line, it might be censored anyway
+			if(this.signal > state.censorshipline & state.random.nextBoolean(state.censorshiprate)) {
+				this.signal = 0;
+			}
+		} else {
+			this.signal = 0;
+		}
+		// add new signal to the population total
+		state.totalsignal += this.signal;
+		// update perceived censorship line based on neighbors' signals
+		updateCensorship(state);
+	}
+	
+	/*
+	 * @author Aviva function for updating perceived censorship based on neighbors' signals
+	 */
+	public void updateCensorship(Environment state) {
+		// remove current perceived censorship from the total
+		state.totalpercievedcensor -= this.censorship;
+		// grab bag of neighbors
+		Bag neighbors = state.network.UndirNeighbors(this);
+		// keep track of the most vocal neighbor (including this agent)
+		double maxsignal = this.signal;
+		// loop through neighbors to find the most dissident (highest) signal
+		for(int i = 0; i < neighbors.numObjs; i++) {
+			Agent a = (Agent) neighbors.objs[i];
+			maxsignal = Math.max(maxsignal, a.signal);
+		}
+		// use the highest observed signal to adjust perceived censorship line
+		this.censorship += state.censorlrate*(maxsignal-this.censorship);
+	}
+	
+	/*
 	 * @author Aviva
-	 * Small helper function to adjust (increment/decrement) population-wide counts based on the agent's signal
+	 * Helper function to adjust (increment/decrement) population-wide counts based on the agent's signal
 	 */
 	public void countSignal(Environment env, int adj) {
 		// adjust the count corresponding to this agent's signal

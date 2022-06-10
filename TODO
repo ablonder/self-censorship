@@ -1,0 +1,9 @@
+-express intensity of opinion rather than just [agree, silent, disagree]
+-censorship (turn person's expression to silent) occurs with some probability (default .5) for opinions above a set intensity (default .8)
+-probability of expression is just a parameter of intensity of opinion (default .5), but what opinion they express is min(censorship, their opinion)
+-update percieved censorship = old percetion + learning rate*(max(self and neighbors) - old perception)
+-parameterize initial percieved censorship (default 1)
+-remove sensitivity learning (reparameterize)
+
+Later steps:
+-add component of people with privilaged information

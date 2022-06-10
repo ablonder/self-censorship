@@ -28,7 +28,8 @@ public class Environment extends Model {
 	double active = 1; //This is the probability of being active on each time step
 	double distance = 0.2; //distance to try to maintain
 	public double initialProtesters = 0.2; // 40% agents disagree with government policy
-	public double initialSensitivity = 0.7; //sensitivity legvel is 0.5 
+	// *Aviva* - sensitivity defaulted to 0 for the censorship model
+	public double initialSensitivity = 0; //sensitivity legvel is 0.5 
 	public int n = 1000; //the number of agents 
 	// *Aviva* - space for the agents to be in, since my Model class doesn't set that up
 	public Continuous2D continuousSpace;
@@ -36,11 +37,25 @@ public class Environment extends Model {
 	public int gridWidth;
 	public int gridHeight;
 	
+	// *Aviva* - censorship parameters
+	// whether agents learn sensitivity or just the censorship line
+	public boolean sensitivity = false;
+	// probability of censorship
+	public double censorshiprate = .5;
+	// censorship threshold
+	public double censorshipline = .8;
+	// initial perceived censorship line
+	public double perceivedcensor = 1;
+	// learning rate
+	public double censorlrate = .5;
+	
 	// *Aviva* some additional variables for gathering aggregate data during the simulation
 	public int positive_signals;
 	public int negative_signals;
 	public int silent_signals;
 	public int totalsensitivity;
+	public int totalpercievedcensor;
+	public int totalsignal;
 
 	/*
 	 * Modified by Aviva (05/12/2022) - removed arguments to match Model
@@ -207,15 +222,22 @@ public class Environment extends Model {
 			//a.event = schedule.scheduleRepeating(1.0,a, scheduleTimeInterval); //this allows us to schedule for explicit time intervals
 			// *Aviva* if there are less than the initial proportion of protesters, make them disagree, otherwise make them agree 
 			if(i < initialProtesters*n) {
-				a.belief = 0.5 * random.nextDouble(true, false); //have a value of [0.5,1), biased towards strategyB
+				a.belief = 0.5 + 0.5 * random.nextDouble(true, false); //have a value of [0.5,1), biased towards strategyB
 			}
 			else {
-				a.belief = 0.5 + 0.5 * random.nextDouble(true, false);  //have a value of [0,0.5), biased towards strategyA
+				a.belief = 0.5 * random.nextDouble(true, false);  //have a value of [0,0.5), biased towards strategyA
 			}
-			a.sensitivity = initialSensitivity + (random.nextDouble(true, false) - 0.5)/10;
+			// *Aviva* only vary agents' sensitivity if they're actually going to be learning it
+			a.sensitivity = initialSensitivity;
+			if(this.sensitivity) {
+				a.sensitivity += (random.nextDouble(true, false) - 0.5)/10;
+			}
 			// *Aviva* add the agent's initial sensitivity and signal to the corresponding counts
 			this.totalsensitivity += a.sensitivity;
 			a.countSignal(this, 1);
+			// *Aviva* set the agents' perceived censorship to the initial value and add it to the count
+			a.censorship = this.perceivedcensor;
+			this.totalpercievedcensor += a.censorship;
 		}
 
 	}
