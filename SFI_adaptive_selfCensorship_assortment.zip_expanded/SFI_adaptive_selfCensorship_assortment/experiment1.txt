@@ -1,0 +1,17 @@
+*seed = 2022
+*sep = ,
+*steps = 5000
+*reps = 10
+*fname = homophily_test1000
+*testint = 1000
+*agentint = 1000
+homophily = 0.0 0.50 1
+peerCost = 0.1
+peerBenefit = 0.1
+censorCost = 0.3
+punishHi = 0.5
+highRatio = 0.10 0.50 1
+n = 1000
+gridWidth = 100
+gridHeight = 100
+*agentInfo = ValueHi signalProb signal fitness pcHi pcGovPunish IDnum 

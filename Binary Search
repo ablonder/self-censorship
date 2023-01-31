@@ -1,0 +1,35 @@
+Binary Search Algorithm:
+
+int pivot = evidence.length/2;
+int lastpivot = 0;
+int templen = evidence.length/2;
+double closest;
+boolean stop = false;
+while(!stop){
+	templen /= 2;
+	lastpivot = pivot;
+	if(Math.abs(pivot-lastpivot) <= 1){
+		stop = true;
+		if(Math.abs(evidence[pivot]-identityx)<Math.abs(evidence[lastpivot]-identityx)){
+			closest = evidence[pivot];
+		}else{
+			closest = evidence[lastpivot];
+		}
+	} else if(evidence[pivot] < identityx){
+		pivot += templen;
+	}if(evidence[pivot] > identityx){
+		pivot -= templen;
+	}else{
+		stop = true;
+		closest = evidence[pivot];
+	}
+}
+
+
+Length = 8
+Pivot = 4
+Templen = 2
+
+Pivot = 6
+Or pivot = 2
+

@@ -1,0 +1,31 @@
+Parameter Sweeps
+
+Number of parameters swept: 7
+
+Table of parameters swept 
+public	double	meanK	1.0	2.0	5.0	10.0	20.0	50.0	100.0	
+
+Parameter values for the class class structures.Environment
+initialProtesters  0.7
+initialSensitivity  0.7
+n  1000
+nameSpace  SPARSE
+gridWidth  50
+gridHeight  50
+paramSweeps  true
+simLength  1000
+simNumber  20
+fileDataName  density_experience.txt
+folderDataName  data
+dataSamplingInterval  1
+burnIn  0
+scheduleTimeInterval  1.0
+closeProgramAtend  true
+meanK	Value	Step	Reps	pro	con	silent	avgSensitivity	Step	Reps	pro	con	silent	avgSensitivity	
+meanK	1.0	999.000	20.000	350.550	8.200	641.250	0.959	999.000	20.000	2.986	0.631	3.136	0.001
+meanK	2.0	999.000	20.000	346.850	6.400	646.750	0.960	999.000	20.000	2.375	0.407	2.394	0.000
+meanK	5.0	999.000	20.000	350.700	5.250	644.050	0.958	999.000	20.000	2.191	0.542	2.379	0.000
+meanK	10.0	999.000	20.000	352.950	5.950	641.100	0.960	999.000	20.000	2.966	0.407	3.103	0.001
+meanK	20.0	999.000	20.000	351.200	5.650	643.150	0.958	999.000	20.000	2.696	0.559	2.764	0.001
+meanK	50.0	999.000	20.000	350.600	5.500	643.900	0.959	999.000	20.000	2.460	0.438	2.381	0.001
+meanK	100.0	999.000	20.000	346.250	5.700	648.050	0.960	999.000	20.000	3.210	0.436	3.485	0.001
