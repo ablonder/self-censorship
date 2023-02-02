@@ -117,7 +117,7 @@ public class Agent implements Steppable {
 			state.payoffPro -= Math.exp(this.lastfitness);
 			state.payoffPro += Math.exp(this.fitness);
 			state.estimatePro -= Math.exp(this.lastfitness)*this.pcHi;
-			state.estimatePro += Math.exp(this.lastfitness)*this.pcHi;
+			state.estimatePro += Math.exp(this.fitness)*this.pcHi;
 		}
 		return other;
 	}
@@ -154,7 +154,6 @@ public class Agent implements Steppable {
 		// grab population counts based on this agent's strategy (and then remove this agent's weighted estimate)
 		double stratest;
 		double stratfit;
-		double stratsig;
 		if(this.ValueHi) {
 			stratest = state.estimateCon;
 			stratfit = state.payoffCon;
@@ -164,10 +163,22 @@ public class Agent implements Steppable {
 			stratfit = state.payoffPro;
 			state.estimatePro -= this.pcHi*Math.exp(this.fitness);
 		}
-		// new estimate is based on the sum of like-minded agents' weighted average estimate and observed signals
-		this.pcHi = state.socweight*stratest/stratfit +
-				state.indweight*state.signalCon/(state.signalCon+state.signalPro) +
-				(1-state.socweight-state.indweight)*this.pcHi;
+		// social learning is based on like-minded agents' average estimate weighted by payoff (unless payoff is 0)
+		double socval = 0;
+		if (stratfit != 0) {
+			socval = stratest/stratfit;
+		}
+		// individual learning is based on what proportion of signaling individuals signaled con (unless no one signaled)
+		double indval = 0;
+		double indw = state.indweight;
+		if (state.signalCon+state.signalPro != 0) {
+			indval = state.signalCon/(state.signalCon+state.signalPro);
+		} else {
+			// if there's no individual learning data, then it shouldn't be weighted
+			indw = 0;
+		}
+		// the actual updated value is the weighted average of social and individual learning and the previous estimate
+		this.pcHi = state.socweight*socval + indw*indval + (1-state.socweight-indw)*this.pcHi;
 		// and then add it to the counts
 		if(this.ValueHi) {
 			state.estimateCon += this.pcHi*Math.exp(this.fitness);

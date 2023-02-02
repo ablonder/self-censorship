@@ -3,16 +3,14 @@ package structures;
 //import continuous_networked_agents.Agent;
 //import groups.NetworkGroup;
 import model.Model;
-import sim.field.continuous.Continuous2D;
 import sim.util.Bag;
-import sim.util.Double2D;
 
 public class Environment extends Model {
 	boolean gaussian = false;
 	double gaussanStandardDeviation = 1.0;
 	public double homophily = 0.0;
 	boolean SignalAssortment = false;
-	boolean soclearn = false; // *Aviva* - toggles between social learning and evolutionary learning models
+	public boolean soclearn; // *Aviva* - toggles between social learning and evolutionary learning models
 	Bag agentPro;
 	Bag agentCon;
 	public double punishHi = 0.5; //probability for government to punish high signals
@@ -159,10 +157,16 @@ public class Environment extends Model {
 			if(random.nextBoolean(highRatio)) {
 				a.ValueHi = true;
 				agentCon.add(a);
+				// *Aviva* - also add all this agent's values to the population counts (by opinion)
+				this.payoffCon += Math.exp(a.fitness);
+				this.estimateCon += a.pcHi*Math.exp(a.fitness);
 			}
 			else {
 				a.ValueHi = false;
 				agentPro.add(a);
+				// *Aviva* - and add this agent's values to the population counts (by opinion)
+				this.payoffPro += Math.exp(a.fitness);
+				this.estimatePro += a.pcHi*Math.exp(a.fitness);
 			}
 			a.signalProb = random.nextDouble(true, true);
 			a.step = 1;
@@ -175,7 +179,6 @@ public class Environment extends Model {
 	 */
 	public void start() {
 		super.start();
-		makeAgents();
 		// *Aviva* - reset population-wide counts to 0
 		this.signalCon = 0;
 		this.signalPro = 0;
@@ -183,6 +186,7 @@ public class Environment extends Model {
 		this.estimatePro = 0;
 		this.payoffCon = 0;
 		this.payoffPro = 0;
+		makeAgents();
 	}
 
 	/*
@@ -213,7 +217,7 @@ public class Environment extends Model {
 	 * Main method for running the simulation
 	 */
 	public static void main(String[] args) {
-		Environment env = new Environment("experiment1.txt");
+		Environment env = new Environment("learnTest.txt");
 	}
 
 }
