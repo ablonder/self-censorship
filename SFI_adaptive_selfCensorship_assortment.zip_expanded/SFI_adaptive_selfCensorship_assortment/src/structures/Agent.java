@@ -19,6 +19,7 @@ public class Agent implements Steppable {
 	public int step;
 	public double lastfitness;
 	public int IDnum;
+	public double obsvarPay; // *Aviva* - observed variance in payoff for all individuals who signaled the same
 	//public Color color;
 
 	public Agent(Environment state) {
@@ -109,13 +110,13 @@ public class Agent implements Steppable {
 		// *Aviva* - finally remove the old fitness and add the new fitness to the population count
 		// and update the weighted estimate (which is also by fitness)
 		if(this.ValueHi) {
-			state.payoffCon -= Math.exp(this.lastfitness);
-			state.payoffCon += Math.exp(this.fitness);
+			state.exppayCon -= Math.exp(this.lastfitness);
+			state.exppayCon += Math.exp(this.fitness);
 			state.estimateCon -= Math.exp(this.lastfitness)*this.pcHi;
 			state.estimateCon += Math.exp(this.fitness)*this.pcHi;
 		} else {
-			state.payoffPro -= Math.exp(this.lastfitness);
-			state.payoffPro += Math.exp(this.fitness);
+			state.exppayPro -= Math.exp(this.lastfitness);
+			state.exppayPro += Math.exp(this.fitness);
 			state.estimatePro -= Math.exp(this.lastfitness)*this.pcHi;
 			state.estimatePro += Math.exp(this.fitness)*this.pcHi;
 		}
@@ -156,30 +157,105 @@ public class Agent implements Steppable {
 		double stratfit;
 		if(this.ValueHi) {
 			stratest = state.estimateCon;
-			stratfit = state.payoffCon;
+			stratfit = state.exppayCon;
 			state.estimateCon -= this.pcHi*Math.exp(this.fitness);
 		} else {
 			stratest = state.estimatePro;
-			stratfit = state.payoffPro;
+			stratfit = state.exppayPro;
 			state.estimatePro -= this.pcHi*Math.exp(this.fitness);
+		}
+		// option to learn from network neighbors rather than the whole population
+		if(state.socnet) {
+			stratest = 0;
+			stratfit = 0;
+			// loop through all the neighbors who this agent learns from (with edges in to it)
+			Bag neighbors = state.net.getEdgesIn(this);
+			for(Object o : neighbors) {
+				// grab the agent and cast it as an agent
+				Agent a = (Agent) o;
+				// if the other agent has the same strategy as this agent, add it to the counts
+				if (a.ValueHi == this.ValueHi) {
+					// add the agnet's weighted estimate to the total estimate
+					stratest += a.pcHi*Math.exp(a.fitness);
+					// and add its exp(fitness) to the total fitness for dividing
+					stratfit += Math.exp(a.fitness);
+				}
+			}
 		}
 		// social learning is based on like-minded agents' average estimate weighted by payoff (unless payoff is 0)
 		double socval = 0;
 		if (stratfit != 0) {
 			socval = stratest/stratfit;
 		}
-		// individual learning is based on what proportion of signaling individuals signaled con (unless no one signaled)
+		// individual learning is based on what proportion of signaling individuals signaled in agreement with this agent
+		// can be from the whole population, this agent's neighbors on the network, or randomly selected
 		double indval = 0;
+		double indstrat = 0;
+		double indtotal = 0;
+		// also creating a bag to hold all individuals who signaled in agreement to get variance in payoff
+		Bag signalers = new Bag();
+		if (state.indpool == 'a') {
+			// if learning from all individuals, just use the population totals
+			indstrat = state.signalCon;
+			indtotal = state.signalCon + state.signalPro;
+		} else if(state.indpool == 'n'){
+			// if learning from network neighbors, loop through them and count up the signals
+			for(Object o : state.net.getEdgesIn(this)) {
+				// cast each agent as an agent
+				Agent a = (Agent) o;
+				if((this.ValueHi && a.signal == 1) || (!this.ValueHi && a.signal == -1)) {
+					indstrat++;
+					indtotal++;
+					signalers.add(a);
+				} else if(a.signal != 0) {
+					indtotal++;
+				}
+			}
+		} else if(state.indpool == 'r') {
+			// if learning from random individuals, draw up to this agent's total number of in edges
+			int count = state.net.getEdgesIn(this).numObjs;
+			while(count > 0) {
+				// grab a random agent
+				Agent a = (Agent) state.agents[state.random.nextInt(state.agents.length)];
+				// make sure it really exists and isn't this agent
+				if(a != null && a != this) {
+					// if so, decrement the number of agents left to learn from
+					count--;
+					// and learn from it
+					if((this.ValueHi && a.signal == 1) || (!this.ValueHi && a.signal == -1)) {
+						indstrat++;
+						indtotal++;
+						signalers.add(a);
+					} else if(a.signal != 0) {
+						indtotal++;
+					}
+				}
+			}
+		}
 		double indw = state.indweight;
-		if (state.signalCon+state.signalPro != 0) {
-			indval = state.signalCon/(state.signalCon+state.signalPro);
-		} else {
+		if(indtotal != 0) {
+			indval = indstrat/indtotal;
+		} else{
 			// if there's no individual learning data, then it shouldn't be weighted
 			indw = 0;
 		}
+		// I'm also going to calculate the variance in payoff of those that signaled in agreement (for possible use later)
+		if(signalers.numObjs > 0) {
+			// first I have to loop through and get the mean payoff
+			double mean = 0;
+			for(Object o : signalers) {
+				mean += ((Agent) o).fitness;
+			}
+			// then loop through again to get the summed distance from the mean
+			this.obsvarPay = 0;
+			for(Object o : signalers) {
+				this.obsvarPay += Math.pow(((Agent) o).fitness - mean/signalers.numObjs, 2)/signalers.numObjs;
+			}
+		}
+		// TODO - incorporate variance (uncertainty)
 		// the actual updated value is the weighted average of social and individual learning and the previous estimate
 		this.pcHi = state.socweight*socval + indw*indval + (1-state.socweight-indw)*this.pcHi;
-		// and then add it to the counts
+		// and then add it to the population counts
 		if(this.ValueHi) {
 			state.estimateCon += this.pcHi*Math.exp(this.fitness);
 		} else {
@@ -194,6 +270,7 @@ public class Agent implements Steppable {
 	public void speakOptimal(Environment state) {
 		// agents speak up when the estimated coordination benefits outweigh the costs based on their opinion
 		double predpayoff;
+		// TODO - add confidence parameter*variance in payoff as exponent on predicted proportion of agreeing signalers
 		if(this.ValueHi) {
 			// dissidents also face a censorship cost (with some probability)
 			predpayoff = (state.peerBenefit-state.punishHi*state.censorCost)*this.pcHi +

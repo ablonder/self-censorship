@@ -118,7 +118,7 @@ public class NetworkGroup extends Network implements Steppable {
 				to = agents.objs[state.random.nextInt(agents.numObjs)];
 				from = agents.objs[state.random.nextInt(agents.numObjs)];
 			}
-			while(!addConnection(from,to, info)) {//connect if not connected otherwise tryu again
+			while(!addConnection(from,to, info)) {//connect if not connected otherwise try again
 				to = agents.objs[state.random.nextInt(agents.numObjs)];
 				from = agents.objs[state.random.nextInt(agents.numObjs)];
 			}
@@ -133,7 +133,7 @@ public class NetworkGroup extends Network implements Steppable {
 				from = agents.objs[state.random.nextInt(agents.numObjs)];
 
 			}
-			while(!addConnection(from,to, info)) {//connect if not connected otherwise tryu again
+			while(!addConnection(from,to, info)) {//connect if not connected otherwise try again
 				to = agents.objs[state.random.nextInt(agents.numObjs)];
 				from = agents.objs[state.random.nextInt(agents.numObjs)];
 			}

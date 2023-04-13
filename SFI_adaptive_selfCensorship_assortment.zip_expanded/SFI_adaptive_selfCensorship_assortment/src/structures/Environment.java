@@ -1,15 +1,17 @@
 package structures;
 
+import groups.NetworkGroup;
 //import continuous_networked_agents.Agent;
 //import groups.NetworkGroup;
 import model.Model;
+import sim.field.network.Network;
 import sim.util.Bag;
 
 public class Environment extends Model {
 	boolean gaussian = false;
 	double gaussanStandardDeviation = 1.0;
 	public double homophily = 0.0;
-	boolean SignalAssortment = false;
+	public boolean SignalAssortment = false;
 	public boolean soclearn; // *Aviva* - toggles between social learning and evolutionary learning models
 	Bag agentPro;
 	Bag agentCon;
@@ -21,7 +23,13 @@ public class Environment extends Model {
 	public double highRatio = 0.6; //proportion of high signalers
 	public double learningBeta = 10.0;
     //public double signalProb = 0.1; //the probability to signal
+	
 	// *Aviva* - social learning model parameters
+	// option to learn from neighbors on a network for social and individual learning
+	public NetworkGroup net;
+	public double meank;
+	public boolean socnet;
+	public char indpool; // whether to individually learn from network neighbors ('n'), random individuals ('r') or everyone ('a')
 	// how much weight is put on individual learning and social learning (and the rest (to 1) is persistence)
 	public double indweight;
 	public double socweight;
@@ -35,9 +43,9 @@ public class Environment extends Model {
 	// weighted total perceived number of dissidents (for each opinion)
 	public double estimateCon;
 	public double estimatePro;
-	// total payoff by opinion (for dividing)
-	public double payoffCon;
-	public double payoffPro;
+	// total e^payoff by opinion (for dividing)
+	public double exppayCon;
+	public double exppayPro;
 	
 	public double getPunishHi() {
 		return punishHi;
@@ -105,15 +113,6 @@ public class Environment extends Model {
 		this.n = n;
 	}
 
-	//public NetworkGroup getNetwork() {
-	//	return network;
-	//}
-
-	//public void setNetwork(NetworkStructure network) {
-	//		this.network = network;
-	//	}
-
-
 	public Environment() {
 		super();
 	}
@@ -148,7 +147,7 @@ public class Environment extends Model {
 		for(int i=0;i<n;i++) {
 			Agent a = new Agent(this);
 			a.event = schedule.scheduleRepeating(a);
-			//add this agent to the list for data gathering
+			//add this agent to the list of agents
 			this.agents[i] = a;
 			a.IDnum = i;
 			//a.event = schedule.scheduleRepeating(1.0,a, scheduleTimeInterval); //this allows us to schedule for explicit time intervals
@@ -158,14 +157,13 @@ public class Environment extends Model {
 				a.ValueHi = true;
 				agentCon.add(a);
 				// *Aviva* - also add all this agent's values to the population counts (by opinion)
-				this.payoffCon += Math.exp(a.fitness);
+				this.exppayCon += Math.exp(a.fitness);
 				this.estimateCon += a.pcHi*Math.exp(a.fitness);
-			}
-			else {
+			} else {
 				a.ValueHi = false;
 				agentPro.add(a);
 				// *Aviva* - and add this agent's values to the population counts (by opinion)
-				this.payoffPro += Math.exp(a.fitness);
+				this.exppayPro += Math.exp(a.fitness);
 				this.estimatePro += a.pcHi*Math.exp(a.fitness);
 			}
 			a.signalProb = random.nextDouble(true, true);
@@ -184,9 +182,14 @@ public class Environment extends Model {
 		this.signalPro = 0;
 		this.estimateCon = 0;
 		this.estimatePro = 0;
-		this.payoffCon = 0;
-		this.payoffPro = 0;
+		this.exppayCon = 0;
+		this.exppayPro = 0;
 		makeAgents();
+		// *Aviva* - if using a network for social or individual learning, create a mean k random network
+		if (this.soclearn && (this.socnet || this.indpool != 'a')){
+			this.net = new NetworkGroup();
+			this.net.randomNetworkMeanK(this, new Bag(this.agents), this.meank, null);
+		}
 	}
 
 	/*
