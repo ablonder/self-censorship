@@ -233,12 +233,11 @@ public class Agent implements Steppable {
 				}
 			}
 		}
-		double indw = state.indweight;
-		if(indtotal != 0) {
+		double socweight = state.socweight;
+		if(indtotal == 0) {
 			indval = indstrat/indtotal;
-		} else{
-			// if there's no individual learning data, then it shouldn't be weighted
-			indw = 0;
+		} else {
+			socweight = 1;
 		}
 		// I'm also going to calculate the variance in payoff of those that signaled in agreement (for possible use later)
 		if(signalers.numObjs > 0) {
@@ -255,7 +254,8 @@ public class Agent implements Steppable {
 		}
 		// TODO - incorporate variance (uncertainty)
 		// the actual updated value is the weighted average of social and individual learning and the previous estimate
-		this.pcHi = state.socweight*socval + indw*indval + (1-state.socweight-indw)*this.pcHi;
+		this.pcHi = (1-state.persistweight)*socweight*socval + (1-state.persistweight)*(1-socweight)*indval
+				+ state.persistweight*this.pcHi;
 		// and then add it to the population counts
 		if(this.ValueHi) {
 			state.estimateCon += this.pcHi*Math.exp(this.fitness);

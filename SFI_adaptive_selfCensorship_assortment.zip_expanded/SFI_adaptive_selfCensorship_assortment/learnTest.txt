@@ -7,7 +7,6 @@
 *teststart = 1 
 *agentint = 1 
 *netint = 1
-homophily = 
 SignalAssortment = 
 soclearn = true 
 punishHi = 0.5
@@ -19,8 +18,8 @@ learningBeta =
 meank = 4
 socnet = true
 indpool = 'n'
-indweight = 0
 socweight = 0 0.5 1
+persistweight = 0
 n = 50
 signalPro = 
 signalCon = 

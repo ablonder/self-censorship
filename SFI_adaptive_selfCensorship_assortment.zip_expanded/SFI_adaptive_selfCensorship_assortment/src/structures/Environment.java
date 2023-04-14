@@ -30,8 +30,8 @@ public class Environment extends Model {
 	public double meank;
 	public boolean socnet;
 	public char indpool; // whether to individually learn from network neighbors ('n'), random individuals ('r') or everyone ('a')
-	// how much weight is put on individual learning and social learning (and the rest (to 1) is persistence)
-	public double indweight;
+	// how much individuals persist in their previous beliefs and how much of the remainder is put toward social (vs individual) learning
+	public double persistweight;
 	public double socweight;
 
 	public int n = 50; //the number of agents
