@@ -3,6 +3,7 @@ package structures;
 //import continuous_networked_agents.Agent;
 import sim.engine.SimState;
 import sim.engine.Stoppable;
+import sim.field.network.Edge;
 import sim.util.Bag;
 import sim.engine.Steppable;
 
@@ -172,7 +173,7 @@ public class Agent implements Steppable {
 			Bag neighbors = state.net.getEdgesIn(this);
 			for(Object o : neighbors) {
 				// grab the agent and cast it as an agent
-				Agent a = (Agent) o;
+				Agent a = (Agent) ((Edge)o).getTo();
 				// if the other agent has the same strategy as this agent, add it to the counts
 				if (a.ValueHi == this.ValueHi) {
 					// add the agnet's weighted estimate to the total estimate
@@ -202,7 +203,7 @@ public class Agent implements Steppable {
 			// if learning from network neighbors, loop through them and count up the signals
 			for(Object o : state.net.getEdgesIn(this)) {
 				// cast each agent as an agent
-				Agent a = (Agent) o;
+				Agent a = (Agent) ((Edge)o).getTo();
 				if((this.ValueHi && a.signal == 1) || (!this.ValueHi && a.signal == -1)) {
 					indstrat++;
 					indtotal++;
