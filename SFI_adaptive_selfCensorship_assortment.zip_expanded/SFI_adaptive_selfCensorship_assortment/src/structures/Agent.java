@@ -234,7 +234,7 @@ public class Agent implements Steppable {
 			}
 		}
 		double socweight = state.socweight;
-		if(indtotal == 0) {
+		if(indtotal != 0) {
 			indval = indstrat/indtotal;
 		} else {
 			socweight = 1;
