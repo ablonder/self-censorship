@@ -173,7 +173,7 @@ public class Agent implements Steppable {
 			Bag neighbors = state.net.getEdgesIn(this);
 			for(Object o : neighbors) {
 				// grab the agent and cast it as an agent
-				Agent a = (Agent) ((Edge)o).getTo();
+				Agent a = (Agent) ((Edge)o).getFrom();
 				// if the other agent has the same strategy as this agent, add it to the counts
 				if (a.ValueHi == this.ValueHi) {
 					// add the agnet's weighted estimate to the total estimate
@@ -234,8 +234,11 @@ public class Agent implements Steppable {
 			}
 		}
 		double socweight = state.socweight;
+		double perweight = state.persistweight;
 		if(indtotal != 0) {
 			indval = indstrat/indtotal;
+		} else if (socval == 0){
+			perweight = 1;
 		} else {
 			socweight = 1;
 		}
@@ -254,8 +257,8 @@ public class Agent implements Steppable {
 		}
 		// TODO - incorporate variance (uncertainty)
 		// the actual updated value is the weighted average of social and individual learning and the previous estimate
-		this.pcHi = (1-state.persistweight)*socweight*socval + (1-state.persistweight)*(1-socweight)*indval
-				+ state.persistweight*this.pcHi;
+		this.pcHi = (1-perweight)*socweight*socval + (1-perweight)*(1-socweight)*indval
+				+ perweight*this.pcHi;
 		// and then add it to the population counts
 		if(this.ValueHi) {
 			state.estimateCon += this.pcHi*Math.exp(this.fitness);

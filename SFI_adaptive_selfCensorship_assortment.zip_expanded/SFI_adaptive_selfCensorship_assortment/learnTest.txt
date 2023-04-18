@@ -1,12 +1,11 @@
 *seed = 2022
 *sep = ,
-*steps = 30
+*steps = 1
 *reps = 1
 *fname = soclearntest
 *testint = 1
 *teststart = 1 
 *agentint = 1 
-*netint = 1
 SignalAssortment = 
 soclearn = true 
 punishHi = 0.5
