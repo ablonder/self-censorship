@@ -203,7 +203,7 @@ public class Agent implements Steppable {
 			// if learning from network neighbors, loop through them and count up the signals
 			for(Object o : state.net.getEdgesIn(this)) {
 				// cast each agent as an agent
-				Agent a = (Agent) ((Edge)o).getTo();
+				Agent a = (Agent) ((Edge)o).getFrom();
 				if((this.ValueHi && a.signal == 1) || (!this.ValueHi && a.signal == -1)) {
 					indstrat++;
 					indtotal++;
