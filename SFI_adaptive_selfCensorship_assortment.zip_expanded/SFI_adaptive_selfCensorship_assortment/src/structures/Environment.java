@@ -12,10 +12,10 @@ public class Environment extends Model {
 	double gaussanStandardDeviation = 1.0;
 	public double homophily = 0.0;
 	public boolean SignalAssortment = false;
-	public boolean soclearn; // *Aviva* - toggles between social learning and evolutionary learning models
+	public boolean learn; // *Aviva* - whether agents learn rather than updating evolutionarily	
 	Bag agentPro;
 	Bag agentCon;
-	public double punishHi = 0.5; //probability for government to punish high signals
+	public double punishCon = 0.5; //probability for government to punish high signals
 	//public double signalerRatio = 0.5; //the percentage of people who signals
 	public double peerCost = 0.1;// neighbor punishment cost
 	public double peerBenefit = 0.2;// neighbor coordination benefit
@@ -24,7 +24,8 @@ public class Environment extends Model {
 	public double learningBeta = 10.0;
     //public double signalProb = 0.1; //the probability to signal
 	
-	// *Aviva* - social learning model parameters
+	// *Aviva* - learning model parameters
+	// social learning model parameters
 	// option to learn from neighbors on a network for social and individual learning
 	public NetworkGroup net;
 	public double meank;
@@ -33,6 +34,11 @@ public class Environment extends Model {
 	// how much individuals persist in their previous beliefs and how much of the remainder is put toward social (vs individual) learning
 	public double persistweight;
 	public double socweight;
+	public boolean intlearn; // whether agents update their estimates based on interactions versus neighbors
+	// bayesian updating parameters
+	public double priorweight;
+	public double priorCon;
+	public double priorPunish;
 
 	public int n = 50; //the number of agents
 	
@@ -40,78 +46,13 @@ public class Environment extends Model {
 	// number of agents that are signaling pro and con on the latest step
 	public double signalPro;
 	public double signalCon;
-	// weighted total perceived number of dissidents (for each opinion)
+	// weighted total perceived number of dissidents by opinion (for social learning)
 	public double estimateCon;
 	public double estimatePro;
-	// total e^payoff by opinion (for dividing)
+	// total e^payoff by opinion (for dividing in social learning)
 	public double exppayCon;
 	public double exppayPro;
 	
-	public double getPunishHi() {
-		return punishHi;
-	}
-
-	public void setPunishHi(double punishHi) {
-		this.punishHi = punishHi;
-	}
-
-
-	public double getPeerCost() {
-		return peerCost;
-	}
-
-	public void setPeerCost(double peerCost) {
-		this.peerCost = peerCost;
-	}
-
-	public double getPeerBenefit() {
-		return peerBenefit;
-	}
-
-	public void setPeerBenefit(double peerBenefit) {
-		this.peerBenefit = peerBenefit;
-	}
-
-	public double getCensorCost() {
-		return censorCost;
-	}
-
-	public void setCensorCost(double censorCost) {
-		this.censorCost = censorCost;
-	}
-
-	public double getHighRatio() {
-		return highRatio;
-	}
-
-	public void setHighRatio(double highRatio) {
-		this.highRatio = highRatio;
-	}
-
-	public boolean isGaussian() {
-		return gaussian;
-	}
-
-	public void setGaussian(boolean gaussian) {
-		this.gaussian = gaussian;
-	}
-
-
-	public double getGaussanStandardDeviation() {
-		return gaussanStandardDeviation;
-	}
-
-	public void setGaussanStandardDeviation(double gaussanStandardDeviation) {
-		this.gaussanStandardDeviation = gaussanStandardDeviation;
-	}
-
-	public int getN() {
-		return n;
-	}
-
-	public void setN(int n) {
-		this.n = n;
-	}
 
 	public Environment() {
 		super();
@@ -154,18 +95,21 @@ public class Environment extends Model {
 			//set a random value for productivity
 			//a.countSignal(this, 1);
 			if(random.nextBoolean(highRatio)) {
-				a.ValueHi = true;
+				a.con = true;
 				agentCon.add(a);
 				// *Aviva* - also add all this agent's values to the population counts (by opinion)
 				this.exppayCon += Math.exp(a.fitness);
-				this.estimateCon += a.pcHi*Math.exp(a.fitness);
+				this.estimateCon += a.pcCon*Math.exp(a.fitness);
 			} else {
-				a.ValueHi = false;
+				a.con = false;
 				agentPro.add(a);
 				// *Aviva* - and add this agent's values to the population counts (by opinion)
 				this.exppayPro += Math.exp(a.fitness);
-				this.estimatePro += a.pcHi*Math.exp(a.fitness);
+				this.estimatePro += a.pcCon*Math.exp(a.fitness);
 			}
+			// *Aviva* - and finally update this individuals estimates
+			a.pcCon = this.priorCon;
+			a.pcGovPunish = this.priorPunish;
 			a.signalProb = random.nextDouble(true, true);
 			a.step = 1;
 		}
@@ -186,7 +130,7 @@ public class Environment extends Model {
 		this.exppayPro = 0;
 		makeAgents();
 		// *Aviva* - if using a network for social or individual learning, create a mean k random network
-		if (this.soclearn && (this.socnet || this.indpool != 'a')){
+		if (this.socnet || this.indpool == 'n'){
 			this.net = new NetworkGroup();
 			this.net.randomNetworkMeanK(this, new Bag(this.agents), this.meank, null);
 		}

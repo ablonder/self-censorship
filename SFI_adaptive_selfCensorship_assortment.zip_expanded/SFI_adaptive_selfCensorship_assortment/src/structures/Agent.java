@@ -11,11 +11,11 @@ import sim.engine.Steppable;
 public class Agent implements Steppable {
 	protected Environment state;
 	protected Stoppable event;
-	public boolean ValueHi; // whether con (hi) or pro (low)
+	public boolean con; // whether con (hi) or pro (low)
 	public double signalProb;// probability of signaling
 	public int signal = 0; // no signal = 0; signal high = 1; signal low = -1
 	public double fitness = 0;//accumulated fitness
-	public double pcHi; //perceived proportion of high (con) signalers
+	public double pcCon; //perceived proportion of high (con) signalers
 	public double pcGovPunish;//perceived probability of government punishment
 	public int step;
 	public double lastfitness;
@@ -25,10 +25,6 @@ public class Agent implements Steppable {
 
 	public Agent(Environment state) {
 		this.state = state;
-		if (state.soclearn){
-			// if using the social learning algorithm, start with a uniformly distributed perceived proportion of dissidents
-			this.pcHi = state.random.nextDouble();
-		}
 	}
 
 	
@@ -44,7 +40,7 @@ public class Agent implements Steppable {
 			state.signalPro--;
 		}
 		// then determine the new signal
-		if (this.ValueHi) {
+		if (this.con) {
 			if(state.random.nextBoolean(this.signalProb)) {
 				this.signal = 1;
 				// *Aviva* - and add it to the population con signal count
@@ -68,16 +64,11 @@ public class Agent implements Steppable {
 	 * Calculates the agent's new fitness based their signal and a randomly drawn peer (with some homophily)
 	 * @return - the other agent they played with
 	 */
-	public Agent payoff(Environment state) {
-		// store the latest fitness before calculating the fitness on this step
-		this.lastfitness = this.fitness;
-		//step2: get cost and benefit
-		//*get a random partner vary with homophily
-		//Bag players = state.continuousSpace.getNeighborsExactlyWithinDistance(new Double2D(x,y), 100, true);
-		//players.remove(this);
+	public Agent interact(Environment state) {
+		// choose an interaction partner with a potential bias based on homophily
 		Bag others = new Bag();
 		if(state.random.nextBoolean(state.homophily)) {
-			if(this.ValueHi) {
+			if(this.con) {
 				others.addAll(state.agentCon);
 			} else {
 				others.addAll(state.agentPro);
@@ -88,40 +79,67 @@ public class Agent implements Steppable {
 		others.remove(this);
 		int randomAgent = state.random.nextInt(others.numObjs); //random agent
 		Agent other = (Agent)others.objs[randomAgent];
+		// calculate payoff for both this agent and its partner
+		payoff(state, other);
+		other.payoff(state, this);
+		return other;
+	}
+	
+	/*
+	 * @author Aviva
+	 * Calculate payoff for agents in an interaction (and do Bayesian learning)
+	 */
+	public void payoff(Environment state, Agent other) {
+		// store the latest fitness before calculating the new fitness
+		this.lastfitness = this.fitness;
+		// calculate coordination payoff based on this agent's signal and their partner's beliefs
 		if (this.signal == 1) {
-			if(other.ValueHi) {
+			if(other.con) {
 				this.fitness += state.peerBenefit;
 			} else {
 				this.fitness -= state.peerCost;
 			}
-		} else {
-			if (this.signal == -1) {
-				if(other.ValueHi) {
-					this.fitness -= state.peerCost;
-				} else {
-					this.fitness += state.peerBenefit;
+		} else if (this.signal == -1) {
+			if(other.con) {
+				this.fitness -= state.peerCost;
+			} else {
+				this.fitness += state.peerBenefit;
+			}
+		}
+		// the partner agent can then update their perceived con based on this agent's signal
+		if(state.intlearn && this.signal != 0) {
+			other.pcCon = ((this.signal+1)/2 + state.priorweight*other.pcCon)/(1 + state.priorweight);
+		}
+		
+		// government censorship
+		int censor = 0;
+		// *Aviva* - modified so censorship occurs with some probability
+		if(this.signal == 1) {
+			if (state.random.nextBoolean(state.punishCon)) {
+				this.fitness -= state.censorCost;
+				censor = 1;
+			}
+			// if agents learn on interaction, con agents also update their perceived censorship here
+			if(state.intlearn) {
+				this.pcGovPunish = (censor + state.priorweight*this.pcGovPunish)/(1 + state.priorweight);
+				if(other.con) {
+					other.pcGovPunish = (censor + state.priorweight*other.pcGovPunish)/(1 + state.priorweight);
 				}
 			}
 		}
-		//step3: government censorship
-		// *Aviva* - modified to .5 probability of censorship
-		if (state.random.nextBoolean(state.punishHi) & this.signal == 1) {
-			this.fitness -= state.censorCost;
-		}
 		// *Aviva* - finally remove the old fitness and add the new fitness to the population count
 		// and update the weighted estimate (which is also by fitness)
-		if(this.ValueHi) {
+		if(this.con) {
 			state.exppayCon -= Math.exp(this.lastfitness);
 			state.exppayCon += Math.exp(this.fitness);
-			state.estimateCon -= Math.exp(this.lastfitness)*this.pcHi;
-			state.estimateCon += Math.exp(this.fitness)*this.pcHi;
+			state.estimateCon -= Math.exp(this.lastfitness)*this.pcCon;
+			state.estimateCon += Math.exp(this.fitness)*this.pcCon;
 		} else {
 			state.exppayPro -= Math.exp(this.lastfitness);
 			state.exppayPro += Math.exp(this.fitness);
-			state.estimatePro -= Math.exp(this.lastfitness)*this.pcHi;
-			state.estimatePro += Math.exp(this.fitness)*this.pcHi;
+			state.estimatePro -= Math.exp(this.lastfitness)*this.pcCon;
+			state.estimatePro += Math.exp(this.fitness)*this.pcCon;
 		}
-		return other;
 	}
 	
 	/*
@@ -130,14 +148,14 @@ public class Agent implements Steppable {
 	public void evolLearn(Environment state, Agent other) {
 		//step4: learning
 		if (this.step == other.step) {
-			if (this.ValueHi == other.ValueHi) {
+			if (this.con == other.con) {
 				double learningifromj = 1/(1 + Math.exp(- state.learningBeta*(other.fitness - this.fitness)));
 				if (state.random.nextBoolean(learningifromj)) {
 					this.signalProb = other.signalProb;
 				}
 			}
 			else {
-				if (this.ValueHi == other.ValueHi) {
+				if (this.con == other.con) {
 					double learningifromj = 1/(1 + Math.exp(- state.learningBeta*(other.fitness - this.lastfitness)));
 					if (state.random.nextBoolean(learningifromj)) {
 						this.signalProb = other.signalProb;
@@ -154,30 +172,28 @@ public class Agent implements Steppable {
 	 */
 	public void socLearn(Environment state) {
 		// grab population counts based on this agent's strategy (and then remove this agent's weighted estimate)
-		double stratest;
-		double stratfit;
-		if(this.ValueHi) {
+		double stratest = 0;
+		double stratfit = 0;
+		if(this.con) {
 			stratest = state.estimateCon;
 			stratfit = state.exppayCon;
-			state.estimateCon -= this.pcHi*Math.exp(this.fitness);
+			state.estimateCon -= this.pcCon*Math.exp(this.fitness);
 		} else {
 			stratest = state.estimatePro;
 			stratfit = state.exppayPro;
-			state.estimatePro -= this.pcHi*Math.exp(this.fitness);
+			state.estimatePro -= this.pcCon*Math.exp(this.fitness);
 		}
 		// option to learn from network neighbors rather than the whole population
-		if(state.socnet) {
-			stratest = 0;
-			stratfit = 0;
+		if(state.socnet && state.socweight > 0) {
 			// loop through all the neighbors who this agent learns from (with edges in to it)
 			Bag neighbors = state.net.getEdgesIn(this);
 			for(Object o : neighbors) {
 				// grab the agent and cast it as an agent
 				Agent a = (Agent) ((Edge)o).getFrom();
 				// if the other agent has the same strategy as this agent, add it to the counts
-				if (a.ValueHi == this.ValueHi) {
+				if (a.con == this.con) {
 					// add the agnet's weighted estimate to the total estimate
-					stratest += a.pcHi*Math.exp(a.fitness);
+					stratest += a.pcCon*Math.exp(a.fitness);
 					// and add its exp(fitness) to the total fitness for dividing
 					stratfit += Math.exp(a.fitness);
 				}
@@ -204,12 +220,16 @@ public class Agent implements Steppable {
 			for(Object o : state.net.getEdgesIn(this)) {
 				// cast each agent as an agent
 				Agent a = (Agent) ((Edge)o).getFrom();
-				if((this.ValueHi && a.signal == 1) || (!this.ValueHi && a.signal == -1)) {
+				// and learn from it
+				if(a.signal == 1) {
 					indstrat++;
+				}
+				if(a.signal != 0) {
 					indtotal++;
+				}
+				// also grab agents that signaled the same
+				if((this.con && a.signal == 1) || (!this.con && a.signal == -1)) {
 					signalers.add(a);
-				} else if(a.signal != 0) {
-					indtotal++;
 				}
 			}
 		} else if(state.indpool == 'r') {
@@ -222,13 +242,16 @@ public class Agent implements Steppable {
 				if(a != null && a != this) {
 					// if so, decrement the number of agents left to learn from
 					count--;
-					// and learn from it
-					if((this.ValueHi && a.signal == 1) || (!this.ValueHi && a.signal == -1)) {
+					// and learn from this one
+					if(a.signal == 1) {
 						indstrat++;
+					}
+					if(a.signal != 0) {
 						indtotal++;
+					}
+					// also grab agents that signaled the same
+					if((this.con && a.signal == 1) || (!this.con && a.signal == -1)) {
 						signalers.add(a);
-					} else if(a.signal != 0) {
-						indtotal++;
 					}
 				}
 			}
@@ -257,13 +280,13 @@ public class Agent implements Steppable {
 		}
 		// TODO - incorporate variance (uncertainty)
 		// the actual updated value is the weighted average of social and individual learning and the previous estimate
-		this.pcHi = (1-perweight)*socweight*socval + (1-perweight)*(1-socweight)*indval
-				+ perweight*this.pcHi;
+		this.pcCon = (1-perweight)*socweight*socval + (1-perweight)*(1-socweight)*indval
+				+ perweight*this.pcCon;
 		// and then add it to the population counts
-		if(this.ValueHi) {
-			state.estimateCon += this.pcHi*Math.exp(this.fitness);
+		if(this.con) {
+			state.estimateCon += this.pcCon*Math.exp(this.fitness);
 		} else {
-			state.estimatePro += this.pcHi*Math.exp(this.fitness);
+			state.estimatePro += this.pcCon*Math.exp(this.fitness);
 		}
 	}
 	
@@ -275,19 +298,18 @@ public class Agent implements Steppable {
 		// agents speak up when the estimated coordination benefits outweigh the costs based on their opinion
 		double predpayoff;
 		// TODO - add confidence parameter*variance in payoff as exponent on predicted proportion of agreeing signalers
-		if(this.ValueHi) {
+		if(this.con) {
 			// dissidents also face a censorship cost (with some probability)
-			predpayoff = (state.peerBenefit-state.punishHi*state.censorCost)*this.pcHi +
-					(-state.peerCost-state.punishHi*state.censorCost)*(1-this.pcHi);
+			predpayoff = state.peerBenefit*this.pcCon - state.peerCost*(1-this.pcCon)
+					- this.pcGovPunish*state.censorCost;
 		} else {
-			predpayoff = state.peerBenefit*(1-this.pcHi) - state.peerCost*this.pcHi;
+			predpayoff = state.peerBenefit*(1-this.pcCon) - state.peerCost*this.pcCon;
 		}
-		// for now, agents will just deterministically speak up when the expected payoff is positive
-		if(predpayoff > 0) {
-			this.signalProb = 1;
-		} else {
-			this.signalProb = 0;
-		}
+		// the expected payoff is converted into a probability using a linear probability model
+		// with B0 = (peerCost + censorCost)/(peerBenefit + peerCost + censorCost)
+		// and B1 = 1/(peerBenefit + peerCost + censorCost)
+		// TODO - turn this into a meaningfully scaled sigmoid
+		this.signalProb = (predpayoff + state.peerCost + state.censorCost)/(state.peerBenefit + state.peerCost + state.censorCost);
 	}
 
 	/*
@@ -297,18 +319,20 @@ public class Agent implements Steppable {
 		// cast the environment as a state since I'll be using it a few times
 		Environment env = (Environment) state;
 		// if using the social learning algorithm, start by calculating the probability of speaking up
-		if(env.soclearn) {
+		if(env.learn) {
 			speakOptimal(env);
 		}
 		// in any case, signal according to the agent's stored probability of speaking up
 		signal(env);
 		// then adjust this agent's fitness accordingly and grab its partner
-		Agent partner = payoff(env);
-		// then learn based on the learning model for this simulation
-		if(env.soclearn) {
-			socLearn(env);
-		} else {
-			evolLearn(env, partner);
+		Agent partner = interact(env);
+		// then learn based on the learning model for this simulation (if not updating during interaction)
+		if(!env.intlearn) {
+			if(env.learn) {
+				socLearn(env);
+			} else {
+				evolLearn(env, partner);
+			}
 		}
 	}
 }
