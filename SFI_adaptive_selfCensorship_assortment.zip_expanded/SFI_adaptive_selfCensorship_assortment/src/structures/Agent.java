@@ -108,7 +108,7 @@ public class Agent implements Steppable {
 		}
 		// the partner agent can then update their perceived con based on this agent's signal
 		if(state.intlearn && this.signal != 0) {
-			other.pcCon = ((this.signal+1)/2 + state.priorweight*other.pcCon)/(1 + state.priorweight);
+			other.pcCon = (1-state.priorweight)*(this.signal+1)/2 + state.priorweight*other.pcCon;
 		}
 		
 		// government censorship
@@ -121,9 +121,9 @@ public class Agent implements Steppable {
 			}
 			// if agents learn on interaction, con agents also update their perceived censorship here
 			if(state.intlearn) {
-				this.pcGovPunish = (censor + state.priorweight*this.pcGovPunish)/(1 + state.priorweight);
+				this.pcGovPunish = (1-state.priorweight)*censor + state.priorweight*this.pcGovPunish;
 				if(other.con) {
-					other.pcGovPunish = (censor + state.priorweight*other.pcGovPunish)/(1 + state.priorweight);
+					other.pcGovPunish = (1-state.priorweight)*censor + state.priorweight*other.pcGovPunish;
 				}
 			}
 		}
