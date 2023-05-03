@@ -1,7 +1,7 @@
 package structures;
 
 import groups.NetworkGroup;
-import model.Model;
+import model.SimDataCollection;
 import sim.engine.SimState;
 import sim.field.continuous.Continuous2D;
 import sim.util.Bag;
@@ -10,7 +10,7 @@ import spaces.Spaces;
 import structures.NetworkStructure.InvalidNetworkTypeException;
 //import structures.NetworkStructure;
 
-public class Environment extends Model {
+public class Environment extends SimDataCollection {
 	boolean gaussian = false;
 	double rotation = .2;
 	double gaussanStandardDeviation = 1.0;

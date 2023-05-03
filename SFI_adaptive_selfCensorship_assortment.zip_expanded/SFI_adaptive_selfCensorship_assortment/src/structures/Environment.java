@@ -2,12 +2,11 @@ package structures;
 
 import groups.NetworkGroup;
 //import continuous_networked_agents.Agent;
-//import groups.NetworkGroup;
-import model.Model;
+import model.SimDataCollection;
 import sim.field.network.Network;
 import sim.util.Bag;
 
-public class Environment extends Model {
+public class Environment extends SimDataCollection {
 	boolean gaussian = false;
 	double gaussanStandardDeviation = 1.0;
 	public double homophily = 0.0;
