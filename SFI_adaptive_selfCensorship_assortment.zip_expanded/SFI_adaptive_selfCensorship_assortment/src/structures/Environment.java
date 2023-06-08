@@ -11,7 +11,6 @@ public class Environment extends SimDataCollection {
 	double gaussanStandardDeviation = 1.0;
 	public double homophily = 0.0;
 	public boolean SignalAssortment = false;
-	public boolean learn; // *Aviva* - whether agents learn rather than updating evolutionarily	
 	Bag agentPro;
 	Bag agentCon;
 	public double punishCon = 0.5; //probability for government to punish high signals
@@ -21,11 +20,11 @@ public class Environment extends SimDataCollection {
 	public double censorCost = 0.2; //probability for censorship cost
 	public double highRatio = 0.6; //proportion of high signalers
 	public double learningBeta = 10.0;
+	public boolean evol; // whether agents use the evolutionary learning model or behave optimally based on estimates
     //public double signalProb = 0.1; //the probability to signal
 	
 	// *Aviva* - learning model parameters
 	// social learning model parameters
-	// option to learn from neighbors on a network for social and individual learning
 	public NetworkGroup net;
 	public double meank;
 	public boolean socnet;
@@ -163,7 +162,7 @@ public class Environment extends SimDataCollection {
 	 * Main method for running the simulation
 	 */
 	public static void main(String[] args) {
-		Environment env = new Environment("learnTest.txt");
+		Environment env = new Environment("testrun.txt");
 	}
 
 }

@@ -318,20 +318,20 @@ public class Agent implements Steppable {
 	public void step(SimState state) {
 		// cast the environment as a state since I'll be using it a few times
 		Environment env = (Environment) state;
-		// if using the social learning algorithm, start by calculating the probability of speaking up
-		if(env.learn) {
+		// if agents act optimally based on learned estimates, start by calculating the probability of speaking up
+		if(!env.evol) {
 			speakOptimal(env);
 		}
 		// in any case, signal according to the agent's stored probability of speaking up
 		signal(env);
 		// then adjust this agent's fitness accordingly and grab its partner
 		Agent partner = interact(env);
-		// then learn based on the learning model for this simulation (if not updating during interaction)
+		// then learn based on the learning model for this simulation if not updating during interaction
 		if(!env.intlearn) {
-			if(env.learn) {
-				socLearn(env);
-			} else {
+			if(env.evol) {
 				evolLearn(env, partner);
+			} else {
+				socLearn(env);
 			}
 		}
 	}
