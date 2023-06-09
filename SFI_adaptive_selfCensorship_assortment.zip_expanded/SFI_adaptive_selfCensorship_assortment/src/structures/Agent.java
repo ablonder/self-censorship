@@ -47,8 +47,8 @@ public class Agent implements Steppable {
 				state.signalCon++;
 			} else {
 				this.signal = 0;
-			}}
-		else {
+			}
+		}else {
 			if(state.random.nextBoolean(this.signalProb)) {
 				this.signal = -1;
 				// *Aviva* - or add it to the population pro signal count

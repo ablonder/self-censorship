@@ -7,40 +7,40 @@ import sim.field.network.Network;
 import sim.util.Bag;
 
 public class Environment extends SimDataCollection {
-	boolean gaussian = false;
-	double gaussanStandardDeviation = 1.0;
-	public double homophily = 0.0;
-	public boolean SignalAssortment = false;
-	Bag agentPro;
-	Bag agentCon;
-	public double punishCon = 0.5; //probability for government to punish high signals
-	//public double signalerRatio = 0.5; //the percentage of people who signals
+	
+	public int n = 50; //the number of agents
+	public double conRatio = 0.6; //proportion of con agents
+	
+	// payoffs
+	public double punishCon = 0.5; //probability for government to punish con signals
 	public double peerCost = 0.1;// neighbor punishment cost
 	public double peerBenefit = 0.2;// neighbor coordination benefit
 	public double censorCost = 0.2; //probability for censorship cost
-	public double highRatio = 0.6; //proportion of high signalers
-	public double learningBeta = 10.0;
-	public boolean evol; // whether agents use the evolutionary learning model or behave optimally based on estimates
-    //public double signalProb = 0.1; //the probability to signal
 	
-	// *Aviva* - learning model parameters
-	// social learning model parameters
-	public NetworkGroup net;
-	public double meank;
-	public boolean socnet;
+	// learning parameters
+	// who to learn from
+	public boolean intlearn; // whether agents update their estimates based on interactions versus neighbors
 	public char indpool; // whether to individually learn from network neighbors ('n'), random individuals ('r') or everyone ('a')
-	// how much individuals persist in their previous beliefs and how much of the remainder is put toward social (vs individual) learning
+	public boolean socnet; // whether a network is used for social learning
+	// evolutionary learning model
+	public boolean evol; // whether agents use the evolutionary learning model or behave optimally based on estimates
+    public double learningBeta = 10.0;
+	// social learning model parameters
 	public double persistweight;
 	public double socweight;
-	public boolean intlearn; // whether agents update their estimates based on interactions versus neighbors
 	// bayesian updating parameters
 	public double priorweight;
 	public double priorCon;
 	public double priorPunish;
-
-	public int n = 50; //the number of agents
+	
+	// social network parameters
+	public NetworkGroup net;
+	public double meank;
+	public double homophily = 0.0;
 	
 	// *Aviva* - some running totals for data collection and learning
+	Bag agentPro;
+	Bag agentCon;
 	// number of agents that are signaling pro and con on the latest step
 	public double signalPro;
 	public double signalCon;
@@ -89,10 +89,8 @@ public class Environment extends SimDataCollection {
 			//add this agent to the list of agents
 			this.agents[i] = a;
 			a.IDnum = i;
-			//a.event = schedule.scheduleRepeating(1.0,a, scheduleTimeInterval); //this allows us to schedule for explicit time intervals
-			//set a random value for productivity
-			//a.countSignal(this, 1);
-			if(random.nextBoolean(highRatio)) {
+			// *Aviva* - set the right proportion of agents to con and the rest to pro
+			if(i < n*conRatio) {
 				a.con = true;
 				agentCon.add(a);
 				// *Aviva* - also add all this agent's values to the population counts (by opinion)
